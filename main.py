@@ -87,4 +87,4 @@ def get_property(property_id: int, bq: bigquery.Client = Depends(get_bq_client))
             detail=f"Property with ID {property_id} not found"
         )
     
-    return property dict(results[0])
+    return dict(results[0])
