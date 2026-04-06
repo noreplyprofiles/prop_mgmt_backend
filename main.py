@@ -74,7 +74,7 @@ def get_property(property_id: int, bq: bigquery.Client = Depends(get_bq_client))
         WHERE property_id = {property_id}
     """
     try:
-        results = bq.query(query).result()
+        results = list(bq.query(query).result())
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
