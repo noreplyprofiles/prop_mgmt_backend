@@ -194,7 +194,7 @@ def get_expenses(property_id: int, bq: bigquery.Client = Depends(get_bq_client))
         ORDER BY date DESC
     """
     try:
-        results = list(bq.quert(query).result())
+        results = list(bq.query(query).result())
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
