@@ -88,3 +88,40 @@ def get_property(property_id: int, bq: bigquery.Client = Depends(get_bq_client))
         )
     
     return dict(results[0])
+
+# ---------------------------------------------------------------------------
+# Income
+# ---------------------------------------------------------------------------
+@app.get("/income/{property_id}")
+def get_income(property_id: int, bq: bigquery.Client = Depends(get_bq_client)):")
+    """
+    Returns the income for a specific property by its ID.
+    """
+    query = f"""
+        SELECT
+            income_id,
+            property_id,
+            amount,
+            date,
+            notes
+        FROM `{PROJECT_ID}.{DATASET}.income`
+        WHERE property_id = {property_id}
+        ORDER BY date DESC
+    """
+
+    try:
+        results = list(bq.query(query).result())
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database query failed: {str(e)}"
+        )
+
+    if not results:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Income for property with ID {property_id} not found"
+        )
+
+    return [dict(row) for row in results]
+
