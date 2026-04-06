@@ -106,7 +106,7 @@ def get_property(property_id: int, bq: bigquery.Client = Depends(get_bq_client))
 # Income
 # ---------------------------------------------------------------------------
 @app.get("/income/{property_id}")
-def get_income(property_id: int, bq: bigquery.Client = Depends(get_bq_client)):")
+def get_income(property_id: int, bq: bigquery.Client = Depends(get_bq_client)):
     """
     Returns the income for a specific property by its ID.
     """
@@ -149,7 +149,7 @@ def create_income(property_id: int, body: CreateIncome, bq: bigquery.Client = De
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Property with ID {property_id} not found"
         )
-    new_income_id = list(bq.query(f"SELECT COALESCEE(MAX(income_id), 0) as new_id FROM `{PROJECT_ID}.{DATASET}.income`").result())[0]["new_id"] + 1
+    new_income_id = list(bq.query(f"SELECT COALESCE(MAX(income_id), 0) as new_id FROM `{PROJECT_ID}.{DATASET}.income`").result())[0]["new_id"] + 1
 
     notes = f'"{body.notes}"' if body.notes else "NULL"
 
@@ -171,6 +171,40 @@ def create_income(property_id: int, body: CreateIncome, bq: bigquery.Client = De
         "property_id": property_id,
         "amount": body.amount,
         "date": body.date,
-        "notes": body.notes"
+        "notes": body.notes
     }
 
+# ---------------------------------------------------------------------------
+# Expenses
+# ---------------------------------------------------------------------------
+@app.get("/expenses/{property_id}")
+def get_expenses(property_id: int, bq: bigquery.Client = Depends(get_bq_client)):
+    """
+    Returns the expenses for a specific property by its ID.
+    """
+    query = f"""
+        SELECT
+            expense_id,
+            property_id,
+            amount,
+            date,
+            notes
+        FROM `{PROJECT_ID}.{DATASET}.expenses`
+        WHERE property_id = {property_id}
+        ORDER BY date DESC
+    """
+    try:
+        results = list(bq.quert(query).result())
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database query failed: {str(e)}"
+        )
+    
+    if not results:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Expenses for property with ID {property_id} not found"
+        )
+    
+    return [dict(row) for row in results]
